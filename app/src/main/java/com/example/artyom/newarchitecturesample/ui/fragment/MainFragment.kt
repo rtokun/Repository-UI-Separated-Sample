@@ -7,14 +7,17 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.TextView
 import android.widget.ViewFlipper
 import com.example.artyom.newarchitecturesample.R
 import dagger.Module
 import dagger.Provides
 import dagger.android.support.DaggerFragment
 import kotlinx.android.synthetic.main.fragment_main.view.btnPay
+import kotlinx.android.synthetic.main.fragment_main.view.btnPayAgain
 import kotlinx.android.synthetic.main.fragment_main.view.btnRetry
 import kotlinx.android.synthetic.main.fragment_main.view.mainViewFlipper
+import kotlinx.android.synthetic.main.fragment_main.view.textViewErrorDescription
 import javax.inject.Inject
 
 @Module
@@ -33,9 +36,12 @@ class MainFragment : DaggerFragment(), MainFragmentView, View.OnClickListener {
     lateinit var mainViewFlipper: ViewFlipper
     lateinit var btnPay: Button
     lateinit var btnRetry: Button
+    lateinit var btnPayAgain: Button
+    lateinit var textViewErrorDescription: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        lifecycle.addObserver(presenter)
         arguments?.let {
         }
     }
@@ -48,9 +54,12 @@ class MainFragment : DaggerFragment(), MainFragmentView, View.OnClickListener {
         mainViewFlipper = view.mainViewFlipper
         btnPay = view.btnPay
         btnRetry = view.btnRetry
+        btnPayAgain = view.btnPayAgain
+        textViewErrorDescription = view.textViewErrorDescription
 
         btnPay.setOnClickListener(this)
         btnRetry.setOnClickListener(this)
+        btnPayAgain.setOnClickListener(this)
         return view
     }
 
@@ -58,12 +67,16 @@ class MainFragment : DaggerFragment(), MainFragmentView, View.OnClickListener {
         when (state) {
             is MainFragmentState.ERROR -> {
                 mainViewFlipper.displayedChild = MAIN_VIEW_ERROR
+                textViewErrorDescription.text = state.errorDescription
             }
             is MainFragmentState.INIT -> {
                 mainViewFlipper.displayedChild = MAIN_VIEW_INIT
             }
             is MainFragmentState.PAY_IN_PROGRESS -> {
                 mainViewFlipper.displayedChild = MAIN_VIEW_LOADING
+            }
+            is MainFragmentState.PAY_SUCCESS -> {
+                mainViewFlipper.displayedChild = MAIN_VIEW_SUCCESS
             }
         }
 
@@ -84,9 +97,10 @@ class MainFragment : DaggerFragment(), MainFragmentView, View.OnClickListener {
     }
 
     override fun onClick(v: View) {
-        when(v.id){
+        when (v.id) {
             R.id.btnPay -> presenter.onPayClicked()
             R.id.btnRetry -> presenter.onRetryClicked()
+            R.id.btnPayAgain -> presenter.onPayClicked()
         }
     }
 
@@ -99,6 +113,7 @@ class MainFragment : DaggerFragment(), MainFragmentView, View.OnClickListener {
         const val MAIN_VIEW_INIT = 0
         const val MAIN_VIEW_LOADING = 1
         const val MAIN_VIEW_ERROR = 2
+        const val MAIN_VIEW_SUCCESS = 3
 
         @JvmStatic
         fun newInstance(param1: String, param2: String) =
